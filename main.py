@@ -1,12 +1,14 @@
-from utils.utils import create_parser
-from utils import data_loader
-from functools import reduce
+import numpy as np
 import pandas as pd
+import scipy.cluster.hierarchy as sch
 import datetime
 import json
-import importlib
 import os
 import ast
+from functools import reduce
+
+from utils.utils import create_parser
+from utils import data_loader
 
 
 def get_config(config_json: str) -> dict:
@@ -41,12 +43,18 @@ if __name__ == '__main__':
         data_config_['symbol'] = symbol
         data_loader_ = data_loader.DataLoader(data_config_)
         data = data_loader_.get_data()
-        ts = data[data['timestamp'] >= min_date][['timestamp', 'close']]
+        data['returns'] = [0.0] + (np.log(np.array(data['close'])[1:] / np.array(data['close'])[:-1])).tolist()
+        ts = data[data['timestamp'] >= min_date][['timestamp', 'returns']]
         ts = ts.set_index('timestamp')
         ts.columns = [symbol]
         timeseries.append(ts)
 
-    reduce(lambda x, y: pd.merge(x, y, left_index=True, right_index=True), timeseries)
+    df_returns = reduce(lambda x, y: pd.merge(x, y, left_index=True, right_index=True), timeseries)
+
+    cor_mat = np.corrcoef(df_returns.T)
+    dist_mat = np.sqrt(.5 * (1 - cor_mat))
+    link = sch.linkage(dist_mat, 'single')
+    a=1
     # continue here
 
 
