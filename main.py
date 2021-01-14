@@ -26,6 +26,38 @@ def get_symbols(symbols_config: str) -> list:
     return symbols
 
 
+def get_quasi_diag(link: np.array) -> list:
+    """
+    Snippet 16.2, page 229
+    :param link: linkage matrix
+    :return:
+    """
+    link = link.astype(int)
+    sort_ix = pd.Series([link[-1, 0], link[-1, 1]])
+    num_items = link[-1, 3]
+    while sort_ix.max() >= num_items:
+        sort_ix.index = range(0, sort_ix.shape[0] * 2, 2)   # make space
+        df0 = sort_ix[sort_ix >= num_items]   # find clusters
+        i = df0.index
+        j = df0.values - num_items
+        sort_ix[i] = link[j, 0]   # item 1
+        df0 = pd.Series(link[j, 1], index=i+1)
+        sort_ix = sort_ix.append(df0)   # item 2
+        sort_ix.sort_index(inplace=True)   # re-sort
+        sort_ix.index = range(sort_ix.shape[0])   # re-index
+    return sort_ix.tolist()
+
+
+def get_rec_bipart(cov, sort_ix):
+    """
+    Snippet 16.3, page 230
+    :param cov:
+    :param sort_ix:
+    :return:
+    """
+    # to implement CONTINUE HERE
+    pass
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     parser = create_parser()
@@ -54,8 +86,8 @@ if __name__ == '__main__':
     cor_mat = np.corrcoef(df_returns.T)
     dist_mat = np.sqrt(.5 * (1 - cor_mat))
     link = sch.linkage(dist_mat, 'single')
-    a=1
-    # continue here
+    sort_ix = get_quasi_diag(link)
+    # continue here -> implement recursive bisection
 
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
