@@ -40,7 +40,10 @@ class DataLoader:
         data = pd.read_csv(StringIO(response.text))
         # except:
         #     a=1
-        data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
+        try:
+            data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
+        except:
+            a=1
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
 

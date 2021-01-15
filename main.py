@@ -48,6 +48,12 @@ def get_quasi_diag(link: np.array) -> list:
     return sort_ix.tolist()
 
 
+def get_cluster_var(cov, c_items):
+    cov_ = cov[c_items][:, c_items]
+    w = np.diag(cov_) ** -1 / np.trace(np.diag(np.diag(cov_) ** -1))
+    return np.linalg.multi_dot([w, cov_, w])
+
+
 def get_rec_bipart(cov, sort_ix):
     """
     Snippet 16.3, page 230
@@ -56,7 +62,21 @@ def get_rec_bipart(cov, sort_ix):
     :return:
     """
     # to implement CONTINUE HERE
-    pass
+    w = pd.Series(1, index=sort_ix)
+    c_items = [sort_ix]
+    while len(c_items) > 0:
+        # c_items = [i[j:k] for i in c_items for j, k in ((0, len(i)/2), (len(i)/2, len(i))) if len(i) > 1]
+        c_items = [i[j:k] for i in c_items for j, k in zip([0, int(len(i)/2)], [int(len(i)/2), len(i)]) if len(i) > 1]
+        for i in range(0, len(c_items), 2):
+            c_items_0 = c_items[i]   # cluster 1
+            c_items_1 = c_items[i+1]   # cluster 2
+            c_var_0 = get_cluster_var(cov, c_items_0)
+            c_var_1 = get_cluster_var(cov, c_items_1)
+            alpha = 1 - c_var_0 / (c_var_0 + c_var_1)
+            w[c_items_0] *= alpha
+            w[c_items_1] *= 1 - alpha
+    return w
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -70,6 +90,8 @@ if __name__ == '__main__':
 
     timeseries = []
     for symbol in symbols:
+        # if symbol=='KO':
+        #     a=1
         print(' ... analyze:', symbol)
         data_config_ = data_conf.copy()
         data_config_['symbol'] = symbol
@@ -84,9 +106,12 @@ if __name__ == '__main__':
     df_returns = reduce(lambda x, y: pd.merge(x, y, left_index=True, right_index=True), timeseries)
 
     cor_mat = np.corrcoef(df_returns.T)
+    cov = np.cov(df_returns.T)
     dist_mat = np.sqrt(.5 * (1 - cor_mat))
     link = sch.linkage(dist_mat, 'single')
     sort_ix = get_quasi_diag(link)
+    w = get_rec_bipart(cov, sort_ix)
+    a=1
     # continue here -> implement recursive bisection
 
 
