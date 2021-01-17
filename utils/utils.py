@@ -1,5 +1,6 @@
 import argparse
 import os
+import ast
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -21,6 +22,14 @@ def create_parser() -> argparse.ArgumentParser:
     )
     return parser
 
+
+def get_symbols(symbols_config: str) -> list:
+    if os.path.isfile(symbols_config):
+        with open(symbols_config, 'r') as f:
+            symbols = f.read().split('\n')
+    else:
+        symbols = ast.literal_eval(symbols_config)
+    return symbols
 
 # def create_dir(path_: str) -> str:
 #     if not os.path.exists(path_):
