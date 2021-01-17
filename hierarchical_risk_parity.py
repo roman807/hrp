@@ -1,15 +1,31 @@
 import numpy as np
 import pandas as pd
 import scipy.cluster.hierarchy as sch
+from scipy.cluster.hierarchy import ClusterWarning
+from warnings import simplefilter
+simplefilter("ignore", ClusterWarning)
 
 
 class HierarchicalRiskParity:
 
-    def __init__(self, cor_mat, cov_mat, symbols):
+    def __init__(self, cor_mat, cov_mat, symbols, constraints):
         self.cor_mat = cor_mat
         self.cov_mat = cov_mat
         self.symbols = symbols
+        self.min_weight_constraints = constraints.min_weight_constraints.reset_index(drop=True)
+        self.max_weight_constraints = constraints.max_weight_constraints.reset_index(drop=True)
         self.weights = None
+
+    def get_cluster_var(self, cov, c_items) -> float:
+        """
+        calculate cluster variance defined as "w.T*cov*w" with weights assigned inversely proportional to variance
+        :param cov: covariance matrix (with all constituents)
+        :param c_items: constituents of cov matrix to consider
+        :return: cluster variance
+        """
+        cov_ = cov[c_items][:, c_items]
+        w = np.diag(cov_) ** -1 / np.trace(np.diag(np.diag(cov_) ** -1))
+        return np.linalg.multi_dot([w, cov_, w])
 
     def get_quasi_diag(self, link: np.array) -> list:
         """
@@ -33,17 +49,6 @@ class HierarchicalRiskParity:
             sort_ix.index = range(sort_ix.shape[0])  # re-index
         return sort_ix.tolist()
 
-    def get_cluster_var(self, cov, c_items) -> float:
-        """
-        calculate cluster variance defined as "w.T*cov*w" with weights assigned inversely proportional to variance
-        :param cov: covariance matrix (with all constituents)
-        :param c_items: constituents of cov matrix to consider
-        :return: cluster variance
-        """
-        cov_ = cov[c_items][:, c_items]
-        w = np.diag(cov_) ** -1 / np.trace(np.diag(np.diag(cov_) ** -1))
-        return np.linalg.multi_dot([w, cov_, w])
-
     def get_rec_bipart(self, cov: np.array, sort_ix: list) -> pd.Series:
         """
         Assign weights to constituents according to inverse-variance allocation
@@ -63,6 +68,23 @@ class HierarchicalRiskParity:
                 c_var_0 = self.get_cluster_var(cov, c_items_0)
                 c_var_1 = self.get_cluster_var(cov, c_items_1)
                 alpha = 1 - c_var_0 / (c_var_0 + c_var_1)
+
+                # adjust for min constraints:
+                min_w_0 = self.min_weight_constraints[c_items_0].sum()
+                min_w_1 = self.min_weight_constraints[c_items_1].sum()
+                if w[c_items_0].values[0] * alpha < min_w_0:
+                    alpha = min_w_0 / w[c_items_0].values[0]
+                if w[c_items_1].values[0] * (1-alpha) < min_w_1:
+                    alpha = 1 - min_w_1 / w[c_items_1].values[0]
+
+                # adjust for max constraints:
+                max_w_0 = self.max_weight_constraints[c_items_0].sum()
+                max_w_1 = self.max_weight_constraints[c_items_1].sum()
+                if w[c_items_0].values[0] * alpha > max_w_0:
+                    alpha = max_w_0 / w[c_items_0].values[0]
+                if w[c_items_1].values[0] * (1-alpha) > max_w_1:
+                    alpha = 1 - max_w_1 / w[c_items_1].values[0]
+
                 w[c_items_0] *= alpha
                 w[c_items_1] *= 1 - alpha
         return w
@@ -74,4 +96,3 @@ class HierarchicalRiskParity:
         w = self.get_rec_bipart(self.cov_mat, sort_ix)
         w.index = [self.symbols[i] for i in w.index]
         self.weights = w
-

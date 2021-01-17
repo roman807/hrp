@@ -16,8 +16,8 @@ def create_parser() -> argparse.ArgumentParser:
         '-dc',
         '--data_conf',
         dest='data_conf',
-        # default='../configs/config_sample_data.json',
-        default='configs/conf_data_alphavantage.json',
+        default='configs/conf_data_default.json',
+        # default='configs/conf_data_alphavantage.json',
         help='config for data'
     )
     return parser

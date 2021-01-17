@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import os
+import re
 from io import StringIO
 from datetime import datetime
 
@@ -77,7 +78,9 @@ class DataLoader:
         files = os.listdir(self.data_config['path'])
         file = [f for f in files if self.data_config['symbol'] in f][0]
         data = pd.read_csv(self.data_config['path'] + file)
-        data.columns = ['timestamp', 'open', 'high', 'low', 'close', 'adj close', 'volume']
+        data.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+        # data['timestamp'] = data['timestamp'].apply(lambda x: x.replace('.', '-'))   # remove if csv timestamp in proper format
+        # data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%d-%m-%y').date())
         data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
