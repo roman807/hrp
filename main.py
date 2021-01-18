@@ -30,7 +30,7 @@ def get_input_market_data(df_returns: pd.DataFrame, constraints: constraints_bui
     symbols = df_returns.columns.tolist()
     cor_mat, cov_mat = np.corrcoef(df_returns.T), np.cov(df_returns.T)
     if conf['max_number_instruments'] < len(symbols):
-        hrp = HierarchicalRiskParity(cor_mat, cov_mat, symbols, constraints)
+        hrp = HierarchicalRiskParity(cor_mat, cov_mat, symbols, constraints, conf)
         hrp.optimize()
         symbols_red = hrp.weights.sort_values(ascending=False).index.tolist()[:conf['max_number_instruments']]
         new_ind = [i for i in range(len(symbols)) if symbols[i] in symbols_red]
@@ -62,12 +62,14 @@ def main():
     cor_mat, cov_mat, symbols = get_input_market_data(df_returns, constraints, conf)
     constraints.ajdust_symbols(symbols)
 
-    hrp = HierarchicalRiskParity(cor_mat, cov_mat, symbols, constraints)
+    hrp = HierarchicalRiskParity(cor_mat, cov_mat, symbols, constraints, conf)
     hrp.optimize()
     print('\noptimized in {} seconds'.format(np.round(time.time() - start_time, 5)))
     constraints.check_constraints(hrp.weights)
     print('optimal allocation:')
     print(hrp.weights)
+    print('variance:', hrp.variance)
+    print('expected return:', hrp.exp_return)
 
 
 if __name__ == '__main__':

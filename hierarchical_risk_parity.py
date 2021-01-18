@@ -8,13 +8,24 @@ simplefilter("ignore", ClusterWarning)
 
 class HierarchicalRiskParity:
 
-    def __init__(self, cor_mat, cov_mat, symbols, constraints):
+    def __init__(self, cor_mat, cov_mat, symbols, constraints, conf):
         self.cor_mat = cor_mat
         self.cov_mat = cov_mat
         self.symbols = symbols
+        self.consider_returns = conf['consider_returns']
+        self.risk_appetite = conf['risk_appetite']
+        self.exp_returns = self.get_expected_returns(conf)
         self.min_weight_constraints = constraints.min_weight_constraints.reset_index(drop=True)
         self.max_weight_constraints = constraints.max_weight_constraints.reset_index(drop=True)
         self.weights = None
+        self.variance = None
+        self.exp_return = None
+
+    def get_expected_returns(self, conf):
+        if not conf['consider_returns']:
+            return None
+        else:
+            return pd.Series(conf['expected_returns'])[self.symbols].reset_index(drop=True)
 
     def get_cluster_var(self, cov, c_items) -> float:
         """
@@ -69,7 +80,14 @@ class HierarchicalRiskParity:
                 c_var_1 = self.get_cluster_var(cov, c_items_1)
                 alpha = 1 - c_var_0 / (c_var_0 + c_var_1)
 
-                # adjust for min constraints:
+                # adjust alpha for expected returns
+                if self.consider_returns:
+                    exp_return_0 = self.exp_returns[c_items_0].mean()
+                    exp_return_1 = self.exp_returns[c_items_1].mean()
+                    alpha2 = exp_return_0 / (exp_return_0 + exp_return_1)
+                    alpha = (alpha + self.risk_appetite * alpha2) / (1 + self.risk_appetite)
+
+                # adjust alpha for min constraints:
                 min_w_0 = self.min_weight_constraints[c_items_0].sum()
                 min_w_1 = self.min_weight_constraints[c_items_1].sum()
                 if w[c_items_0].values[0] * alpha < min_w_0:
@@ -77,7 +95,7 @@ class HierarchicalRiskParity:
                 if w[c_items_1].values[0] * (1-alpha) < min_w_1:
                     alpha = 1 - min_w_1 / w[c_items_1].values[0]
 
-                # adjust for max constraints:
+                # adjust alpha for max constraints:
                 max_w_0 = self.max_weight_constraints[c_items_0].sum()
                 max_w_1 = self.max_weight_constraints[c_items_1].sum()
                 if w[c_items_0].values[0] * alpha > max_w_0:
@@ -95,4 +113,7 @@ class HierarchicalRiskParity:
         sort_ix = self.get_quasi_diag(link)
         w = self.get_rec_bipart(self.cov_mat, sort_ix)
         w.index = [self.symbols[i] for i in w.index]
+        w = w[self.symbols]
         self.weights = w
+        self.variance = np.round(np.linalg.multi_dot([w, self.cov_mat, w]), 6)
+        self.exp_return = np.round(sum(np.array(w) * np.array(self.exp_returns)), 6)

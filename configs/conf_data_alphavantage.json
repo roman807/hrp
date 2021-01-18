@@ -2,14 +2,7 @@
     "api": "alphavantage",
     "function":"TIME_SERIES_DAILY",
     "symbols":"['AAPL', 'GOOG', 'FB', 'IVV']",
-    "min_weight_constraints": {
-        "AAPL": 0.2
-    },
-    "max_weight_constraints": {
-        "AMZN": 0.3
-    },
-    "max_number_instruments": 4,
-    "apikey":"JHC56UFM63VB6RUJ",
+    "apikey":"************",
     "outputsize": "full",
     "datatype":"csv"
 }
