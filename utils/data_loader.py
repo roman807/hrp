@@ -1,4 +1,5 @@
 import requests
+import numpy as np
 import pandas as pd
 import os
 import re
@@ -6,20 +7,21 @@ from io import StringIO
 from datetime import datetime
 
 METHODS = {
-    'alphavantage': 'get_data_alphavantage',
-    'iex': 'get_data_iex',
-    'local_sample_data': 'get_sample_data'
+    'alphavantage': 'load_data_alphavantage',
+    'iex': 'load_data_iex',
+    'local_sample_data': 'load_sample_data'
 }
 
 
 class DataLoader:
     def __init__(self, data_config: dict):
         self.data_config = data_config
+        self.data = self.load_data()
 
-    def get_data(self):
+    def load_data(self):
         return getattr(DataLoader, METHODS[self.data_config['api']])(self)
 
-    def get_data_alphavantage(self) -> pd.DataFrame:
+    def load_data_alphavantage(self) -> pd.DataFrame:
         """
         :return: daily prices from alphavantage: https://www.alphavantage.co/
         """
@@ -37,18 +39,12 @@ class DataLoader:
         if "Error Message" in response.text:
             # print('skipping', self.data_config['symbol'], '(not available)')
             return pd.DataFrame()
-        # try:
         data = pd.read_csv(StringIO(response.text))
-        # except:
-        #     a=1
-        try:
-            data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
-        except:
-            a=1
+        data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
 
-    def get_data_iex(self) -> pd.DataFrame:
+    def load_data_iex(self) -> pd.DataFrame:
         """
         :return: daily prices from https://iexcloud.io/
         """
@@ -71,7 +67,7 @@ class DataLoader:
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
 
-    def get_sample_data(self) -> pd.DataFrame:
+    def load_sample_data(self) -> pd.DataFrame:
         """
         :return: locally saved csv files (yahoo.finance)
         """
@@ -84,6 +80,14 @@ class DataLoader:
         data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
+
+    def get_returns(self, min_date):
+        data = self.data.copy()
+        data['returns'] = [0.0] + (np.log(np.array(data['close'])[1:] / np.array(data['close'])[:-1])).tolist()
+        ts = data[data['timestamp'] >= min_date][['timestamp', 'returns']]
+        ts = ts.set_index('timestamp')
+        ts.columns = [self.data_config['symbol']]
+        return ts
 
 
 

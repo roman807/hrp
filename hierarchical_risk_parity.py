@@ -3,15 +3,17 @@ import pandas as pd
 import scipy.cluster.hierarchy as sch
 from scipy.cluster.hierarchy import ClusterWarning
 from warnings import simplefilter
+
+from utils.market_data import MarketData
+from utils.constraints_builder import ConstraintsBuilder
+
 simplefilter("ignore", ClusterWarning)
 
 
 class HierarchicalRiskParity:
 
-    def __init__(self, cor_mat, cov_mat, symbols, constraints, conf):
-        self.cor_mat = cor_mat
-        self.cov_mat = cov_mat
-        self.symbols = symbols
+    def __init__(self, market_data: MarketData, constraints: ConstraintsBuilder, conf: dict):
+        self.market_data = market_data
         self.consider_returns = conf['consider_returns']
         self.risk_appetite = conf['risk_appetite']
         self.exp_returns = self.get_expected_returns(conf)
@@ -25,7 +27,7 @@ class HierarchicalRiskParity:
         if not conf['consider_returns']:
             return None
         else:
-            return pd.Series(conf['expected_returns'])[self.symbols].reset_index(drop=True)
+            return pd.Series(conf['expected_returns'])[self.market_data.universe].reset_index(drop=True)
 
     def get_cluster_var(self, cov, c_items) -> float:
         """
@@ -108,12 +110,12 @@ class HierarchicalRiskParity:
         return w
 
     def optimize(self):
-        dist_mat = np.sqrt(.5 * (1 - self.cor_mat))
+        dist_mat = np.sqrt(.5 * (1 - self.market_data.cor_mat))
         link = sch.linkage(dist_mat, 'single')   # hierarchical/agglomerative clustering
         sort_ix = self.get_quasi_diag(link)
-        w = self.get_rec_bipart(self.cov_mat, sort_ix)
-        w.index = [self.symbols[i] for i in w.index]
-        w = w[self.symbols]
+        w = self.get_rec_bipart(self.market_data.cov_mat, sort_ix)
+        w.index = [self.market_data.universe[i] for i in w.index]
+        w = w[self.market_data.universe]
         self.weights = w
-        self.variance = np.round(np.linalg.multi_dot([w, self.cov_mat, w]), 6)
+        self.variance = np.round(np.linalg.multi_dot([w, self.market_data.cov_mat, w]), 6)
         self.exp_return = np.round(sum(np.array(w) * np.array(self.exp_returns)), 6)

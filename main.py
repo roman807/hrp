@@ -6,8 +6,11 @@ import time
 from functools import reduce
 
 from hierarchical_risk_parity import HierarchicalRiskParity
+from mean_variance import MeanVariance
 from utils.utils import create_parser, get_symbols
-from utils import data_loader, constraints_builder
+from utils.data_loader import DataLoader
+from utils.constraints_builder import ConstraintsBuilder
+from utils.market_data import MarketData
 
 
 def get_config(config_json: str) -> dict:
@@ -16,60 +19,42 @@ def get_config(config_json: str) -> dict:
     return config
 
 
-def get_time_series(data_config: dict, min_date: datetime.date) -> pd.Series:
-    data_loader_ = data_loader.DataLoader(data_config)
-    data = data_loader_.get_data()
-    data['returns'] = [0.0] + (np.log(np.array(data['close'])[1:] / np.array(data['close'])[:-1])).tolist()
-    ts = data[data['timestamp'] >= min_date][['timestamp', 'returns']]
-    ts = ts.set_index('timestamp')
-    ts.columns = [data_config['symbol']]
-    return ts
-
-
-def get_input_market_data(df_returns: pd.DataFrame, constraints: constraints_builder.ConstraintsBuilder, conf: dict):
-    symbols = df_returns.columns.tolist()
-    cor_mat, cov_mat = np.corrcoef(df_returns.T), np.cov(df_returns.T)
-    if conf['max_number_instruments'] < len(symbols):
-        hrp = HierarchicalRiskParity(cor_mat, cov_mat, symbols, constraints, conf)
-        hrp.optimize()
-        symbols_red = hrp.weights.sort_values(ascending=False).index.tolist()[:conf['max_number_instruments']]
-        new_ind = [i for i in range(len(symbols)) if symbols[i] in symbols_red]
-        symbols = symbols_red
-        cov_mat = cov_mat.take(new_ind, axis=0).take(new_ind, axis=1)
-        cor_mat = cor_mat.take(new_ind, axis=0).take(new_ind, axis=1)
-    return cor_mat, cov_mat, symbols
-
-
 def main():
     start_time = time.time()
     parser = create_parser()
     args = parser.parse_args()
     conf = get_config(args.conf)
     data_conf = get_config(args.data_conf)
-    all_symbols = get_symbols(data_conf['symbols'])
-    constraints = constraints_builder.ConstraintsBuilder(conf, all_symbols)
+    universe = get_symbols(data_conf['symbols'])
+    constraints = ConstraintsBuilder(conf, universe)
     min_date = datetime.date.today() - datetime.timedelta(days=365*conf['yrs_look_back'])
 
     all_ts = []
-    for symbol in all_symbols:
+    for symbol in universe:
         print(' ... load:', symbol)
-        data_config_ = data_conf.copy()
-        data_config_['symbol'] = symbol
-        ts = get_time_series(data_config_, min_date)
-        all_ts.append(ts)
+        data_conf_ = data_conf.copy()
+        data_conf_['symbol'] = symbol
+        data_loader = DataLoader(data_conf_)
+        all_ts.append(data_loader.get_returns(min_date))
 
     df_returns = reduce(lambda x, y: pd.merge(x, y, left_index=True, right_index=True), all_ts)
-    cor_mat, cov_mat, symbols = get_input_market_data(df_returns, constraints, conf)
-    constraints.ajdust_symbols(symbols)
+    market_data = MarketData(df_returns)
+    if conf['max_number_instruments'] < len(market_data.universe):
+        hrp = HierarchicalRiskParity(market_data, constraints, conf)
+        hrp.optimize()
+        reduced_universe = hrp.weights.sort_values(ascending=False).index.tolist()[:conf['max_number_instruments']]
+        market_data.reduce_market_data(reduced_universe)
+        constraints.ajdust_universe(reduced_universe)
 
-    hrp = HierarchicalRiskParity(cor_mat, cov_mat, symbols, constraints, conf)
-    hrp.optimize()
+    # opt = HierarchicalRiskParity(market_data, constraints, conf)
+    opt = MeanVariance(market_data, constraints, conf)
+    opt.optimize()
     print('\noptimized in {} seconds'.format(np.round(time.time() - start_time, 5)))
-    constraints.check_constraints(hrp.weights)
+    # constraints.check_constraints(opt.weights)
     print('optimal allocation:')
-    print(hrp.weights)
-    print('variance:', hrp.variance)
-    print('expected return:', hrp.exp_return)
+    print(opt.weights)
+    print('variance:', opt.variance)
+    print('expected return:', opt.exp_return)
 
 
 if __name__ == '__main__':
