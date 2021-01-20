@@ -9,7 +9,7 @@
   },
   "max_number_instruments": 6,
   "consider_returns": true,
-  "risk_appetite": 0.0,
+  "risk_appetite": 1.0,
   "expected_returns": {
     "AAPL": 0.03,
     "GOOG": 0.08,

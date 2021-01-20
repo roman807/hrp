@@ -46,8 +46,8 @@ def main():
         market_data.reduce_market_data(reduced_universe)
         constraints.ajdust_universe(reduced_universe)
 
-    # opt = HierarchicalRiskParity(market_data, constraints, conf)
-    opt = MeanVariance(market_data, constraints, conf)
+    opt = HierarchicalRiskParity(market_data, constraints, conf)
+    # opt = MeanVariance(market_data, constraints, conf)
     opt.optimize()
     print('\noptimized in {} seconds'.format(np.round(time.time() - start_time, 5)))
     # constraints.check_constraints(opt.weights)
