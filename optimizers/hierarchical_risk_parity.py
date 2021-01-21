@@ -4,30 +4,17 @@ import scipy.cluster.hierarchy as sch
 from scipy.cluster.hierarchy import ClusterWarning
 from warnings import simplefilter
 
+from optimizers.optimizer import Optimizer
 from utils.market_data import MarketData
 from utils.constraints_builder import ConstraintsBuilder
 
 simplefilter("ignore", ClusterWarning)
 
 
-class HierarchicalRiskParity:
+class HierarchicalRiskParity(Optimizer):
 
     def __init__(self, market_data: MarketData, constraints: ConstraintsBuilder, conf: dict):
-        self.market_data = market_data
-        self.consider_returns = conf['consider_returns']
-        self.risk_appetite = conf['risk_appetite']
-        self.exp_returns = self.get_expected_returns(conf)
-        self.min_weight_constraints = constraints.min_weight_constraints.reset_index(drop=True)
-        self.max_weight_constraints = constraints.max_weight_constraints.reset_index(drop=True)
-        self.weights = None
-        self.variance = None
-        self.exp_return = None
-
-    def get_expected_returns(self, conf):
-        if not conf['consider_returns']:
-            return None
-        else:
-            return pd.Series(conf['expected_returns'])[self.market_data.universe].reset_index(drop=True)
+        super().__init__(market_data, constraints, conf)
 
     def get_cluster_var(self, cov, c_items) -> float:
         """
@@ -115,7 +102,4 @@ class HierarchicalRiskParity:
         sort_ix = self.get_quasi_diag(link)
         w = self.get_rec_bipart(self.market_data.cov_mat, sort_ix)
         w.index = [self.market_data.universe[i] for i in w.index]
-        w = w[self.market_data.universe]
-        self.weights = w
-        self.variance = np.round(np.linalg.multi_dot([w, self.market_data.cov_mat, w]), 6)
-        self.exp_return = np.round(sum(np.array(w) * np.array(self.exp_returns)), 6)
+        self.weights = w[self.market_data.universe]

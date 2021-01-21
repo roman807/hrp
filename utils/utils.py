@@ -1,7 +1,7 @@
 import argparse
 import os
 import ast
-
+import json
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description='ts forecasting', add_help=False)
@@ -21,6 +21,12 @@ def create_parser() -> argparse.ArgumentParser:
         help='config for data'
     )
     return parser
+
+
+def get_config(config_json: str) -> dict:
+    with open(config_json) as f:
+        config = json.load(f)
+    return config
 
 
 def get_symbols(symbols_config: str) -> list:
