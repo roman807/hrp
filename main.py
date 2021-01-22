@@ -1,6 +1,5 @@
 import numpy as np
 import datetime
-import json
 import time
 
 from optimizers.hierarchical_risk_parity import HierarchicalRiskParity
@@ -38,6 +37,7 @@ def main():
     opt = HierarchicalRiskParity(market_data, constraints, conf)
     # opt = MeanVariance(market_data, constraints, conf)
     opt.optimize()
+    opt.evaluate()
     print('\noptimized in {} seconds'.format(np.round(time.time() - start_time, 5)))
     opt.print_result()
 

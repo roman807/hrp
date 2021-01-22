@@ -29,9 +29,13 @@ class Optimizer:
     def optimize(self):
         pass
 
-    def print_result(self):
+    def evaluate(self):
         self.variance = np.round(np.linalg.multi_dot([self.weights, self.market_data.cov_mat, self.weights]), 6)
         self.exp_return = np.round(sum(np.array(self.weights) * np.array(self.exp_returns)), 6)
+
+    def print_result(self):
+        # self.variance = np.round(np.linalg.multi_dot([self.weights, self.market_data.cov_mat, self.weights]), 6)
+        # self.exp_return = np.round(sum(np.array(self.weights) * np.array(self.exp_returns)), 6)
         print('optimal allocation:')
         print(self.weights)
         print('variance:', self.variance)
