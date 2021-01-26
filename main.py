@@ -22,8 +22,9 @@ def main():
     # prepare optimization problem
     universe = get_symbols(data_conf['symbols'])
     constraints = ConstraintsBuilder(conf, universe)
-    min_date = datetime.date.today() - datetime.timedelta(days=365*conf['yrs_look_back'])
-    data_loader = DataLoader(data_conf, universe, min_date)
+    returns_to_date = datetime.date.today()
+    returns_from_date = returns_to_date - datetime.timedelta(days=365*conf['yrs_look_back'])
+    data_loader = DataLoader(data_conf, universe, returns_from_date, returns_to_date)
     data_loader.load_data()
     market_data = MarketData(data_loader.df_returns)
 

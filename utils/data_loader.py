@@ -2,38 +2,59 @@ import requests
 import numpy as np
 import pandas as pd
 import os
-import re
 from io import StringIO
 from datetime import datetime
 from functools import reduce
+from collections import defaultdict
+import time
 
 METHODS = {
     'alphavantage': 'load_data_alphavantage',
     'iex': 'load_data_iex',
     'local_sample_data': 'load_sample_data'
 }
+ALPHAVANTAGE_SLEEP_TIME = 65
 
 
 class DataLoader:
-    def __init__(self, data_config: dict, universe: list, min_date: datetime.date):
+    def __init__(self, data_config, universe, from_date=None, to_date=None, save_dir='sample_data/'):
         self.data_config = data_config
         self.universe = universe
-        self.min_date = min_date
+        self.from_date = from_date
+        self.to_date = to_date
         self.all_data = {}
-        self.df_returns = None
+        self.df_returns = defaultdict(pd.DataFrame)
+        self.save_dir = save_dir
 
-    def load_data(self):
+    def load_data(self, get_returns=True, save_as_csv=False, print_progress=True):
         all_ts = []
         for symbol in self.universe:
-            print(' ... load:', symbol)
+            if print_progress:
+                print(' ... load:', symbol)
             data = getattr(DataLoader, METHODS[self.data_config['api']])(self, symbol)
-            all_ts.append(self.get_returns(data, symbol))
-            self.all_data[symbol] = data
-        self.df_returns = reduce(lambda x, y: pd.merge(x, y, left_index=True, right_index=True), all_ts)
+            if data.empty:
+                continue
+            else:
+                self.all_data[symbol] = data
+            if get_returns:
+                all_ts.append(self.get_returns(self.all_data[symbol], symbol))
+            if save_as_csv:
+                self.all_data[symbol].to_csv(self.save_dir + '{}.csv'.format(symbol), index=False)
+                print('saved', symbol, 'in', self.save_dir)
+        if get_returns:
+            keys_to_remove = []
+            for k, v in self.all_data.items():
+                if not v['timestamp'].min() <= self.from_date:
+                    keys_to_remove.append(k)
+            for k in keys_to_remove:
+                self.all_data.pop(k)
+            all_ts = [ts for ts in all_ts if ts.columns[0] not in keys_to_remove]
+            self.universe = [i for i in self.universe if i not in keys_to_remove]
+            self.df_returns = reduce(lambda x, y: pd.merge(x, y, left_index=True, right_index=True), all_ts)
 
     def get_returns(self, data, symbol):
         data['returns'] = [0.0] + (np.log(np.array(data['close'])[1:] / np.array(data['close'])[:-1])).tolist()
-        ts = data[data['timestamp'] >= self.min_date][['timestamp', 'returns']]
+        ts = data[(data['timestamp'] >= self.from_date) & (data['timestamp'] <= self.to_date)][['timestamp', 'returns']]
         ts = ts.set_index('timestamp')
         ts.columns = [symbol]
         return ts
@@ -55,8 +76,12 @@ class DataLoader:
             datatype=self.data_config['datatype'])
         response = requests.get(url)
         if "Error Message" in response.text:
-            # print('skipping', self.data_config['symbol'], '(not available)')
+            print('skipping', symbol, '(not available)')
             return pd.DataFrame()
+        if '5 calls per minute' in response.text:
+            print('reached alphavantage free API limit -> sleep for {} seconds'.format(ALPHAVANTAGE_SLEEP_TIME))
+            time.sleep(ALPHAVANTAGE_SLEEP_TIME)
+            response = requests.get(url)
         data = pd.read_csv(StringIO(response.text))
         data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         data.sort_values(by='timestamp', ascending=True, inplace=True)
@@ -91,14 +116,9 @@ class DataLoader:
         :return: locally saved csv files (yahoo.finance)
         """
         files = os.listdir(self.data_config['path'])
-        # file = [f for f in files if self.data_config['symbol'] in f][0]
         file = [f for f in files if symbol in f][0]
         data = pd.read_csv(self.data_config['path'] + file)
         data.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
         data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
-
-
-
-

@@ -20,7 +20,7 @@ class Optimizer:
         self.exp_return = None
 
     def get_expected_returns(self, conf):
-        if not conf['consider_returns']:
+        if not self.consider_returns:
             return None
         else:
             return pd.Series(conf['expected_returns'])[self.market_data.universe].reset_index(drop=True)
@@ -31,7 +31,8 @@ class Optimizer:
 
     def evaluate(self):
         self.variance = np.round(np.linalg.multi_dot([self.weights, self.market_data.cov_mat, self.weights]), 6)
-        self.exp_return = np.round(sum(np.array(self.weights) * np.array(self.exp_returns)), 6)
+        if self.consider_returns:
+            self.exp_return = np.round(sum(np.array(self.weights) * np.array(self.exp_returns)), 6)
 
     def print_result(self):
         # self.variance = np.round(np.linalg.multi_dot([self.weights, self.market_data.cov_mat, self.weights]), 6)

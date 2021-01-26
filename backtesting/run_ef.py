@@ -44,11 +44,9 @@ CONF_DATA = {
 
 
 def main():
-    start_time = time.time()
-
     # get user inputs
     parser = create_parser()
-    args = parser.parse_args()
+    # args = parser.parse_args()
     # conf = get_config(args.conf)
     # data_conf = get_config(args.data_conf)
     conf = CONF

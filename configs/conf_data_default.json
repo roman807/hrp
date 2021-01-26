@@ -1,7 +1,7 @@
 {
     "api": "local_sample_data",
     "function":"TIME_SERIES_DAILY",
-    "path":"sample_data/",
+    "path":"sample_data/s_and_p500/",
     "symbols":"['AAPL', 'GOOG', 'FB', 'AMZN', 'KO', 'BX']",
     "apikey":"JHC56UFM63VB6RUJ",
     "outputsize":"full",
