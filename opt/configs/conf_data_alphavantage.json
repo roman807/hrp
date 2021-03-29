@@ -1,8 +1,8 @@
 {
     "api": "alphavantage",
     "function":"TIME_SERIES_DAILY",
-    "symbols":"['AAPL', 'GOOG', 'FB', 'IVV']",
-    "apikey":"************",
+    "symbols":"['AAPL', 'GOOG', 'FB', 'AMZN', 'KO', 'BX']",
+    "apikey":"JHC56UFM63VB6RUJ",
     "outputsize": "full",
     "datatype":"csv"
 }

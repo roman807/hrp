@@ -4,9 +4,9 @@ import scipy.cluster.hierarchy as sch
 from scipy.cluster.hierarchy import ClusterWarning
 from warnings import simplefilter
 
-from optimizers.optimizer import Optimizer
+from opt.optimizers.optimizer import Optimizer
 from utils.market_data import MarketData
-from utils.constraints_builder import ConstraintsBuilder
+from opt.opt_utils.constraints_builder import ConstraintsBuilder
 
 simplefilter("ignore", ClusterWarning)
 

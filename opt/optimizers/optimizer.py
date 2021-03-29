@@ -3,7 +3,7 @@ import pandas as pd
 from abc import abstractmethod
 
 from utils.market_data import MarketData
-from utils.constraints_builder import ConstraintsBuilder
+from opt.opt_utils.constraints_builder import ConstraintsBuilder
 
 
 class Optimizer:

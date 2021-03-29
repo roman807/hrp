@@ -2,11 +2,11 @@ import numpy as np
 import datetime
 import time
 
-from optimizers.hierarchical_risk_parity import HierarchicalRiskParity
-from optimizers.mean_variance import MeanVariance
-from utils.utils import create_parser, get_symbols, get_config
+from opt.optimizers.hierarchical_risk_parity import HierarchicalRiskParity
+from utils.utils import get_symbols, get_config
+from opt.opt_utils.opt_utils import opt_parser
 from utils.data_loader import DataLoader
-from utils.constraints_builder import ConstraintsBuilder
+from opt.opt_utils.constraints_builder import ConstraintsBuilder
 from utils.market_data import MarketData
 
 
@@ -14,7 +14,7 @@ def main():
     start_time = time.time()
 
     # get user inputs
-    parser = create_parser()
+    parser = opt_parser()
     args = parser.parse_args()
     conf = get_config(args.conf)
     data_conf = get_config(args.data_conf)
@@ -24,7 +24,7 @@ def main():
     constraints = ConstraintsBuilder(conf, universe)
     returns_to_date = datetime.date.today()
     returns_from_date = returns_to_date - datetime.timedelta(days=365*conf['yrs_look_back'])
-    data_loader = DataLoader(data_conf, universe, returns_from_date, returns_to_date)
+    data_loader = DataLoader(data_conf, returns_from_date, returns_to_date)
     data_loader.load_data()
     market_data = MarketData(data_loader.df_returns)
 
@@ -35,12 +35,12 @@ def main():
         reduced_universe = hrp.weights.sort_values(ascending=False).index.tolist()[:conf['max_number_instruments']]
         market_data.reduce_market_data(reduced_universe)
         constraints.ajdust_universe(reduced_universe)
-    opt = HierarchicalRiskParity(market_data, constraints, conf)
+    optimizer = HierarchicalRiskParity(market_data, constraints, conf)
     # opt = MeanVariance(market_data, constraints, conf)
-    opt.optimize()
-    opt.evaluate()
+    optimizer.optimize()
+    optimizer.evaluate()
     print('\noptimized in {} seconds'.format(np.round(time.time() - start_time, 5)))
-    opt.print_result()
+    optimizer.print_result()
 
 
 if __name__ == '__main__':

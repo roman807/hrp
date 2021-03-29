@@ -5,7 +5,7 @@
     "AAPL": 0.15
   },
   "max_weight_constraints": {
-    "AMZN": 0.3
+    "GOOG": 0.3
   },
   "max_number_instruments": 6,
   "consider_returns": true,
@@ -14,8 +14,8 @@
     "AAPL": 0.03,
     "GOOG": 0.08,
     "FB": 0.08,
-    "AMZN": 0.02,
-    "KO": 0.01,
-    "BX": 0.09
+    "BX": 0.02,
+    "AMZN": 0.05,
+    "KO": 0.025
   }
 }

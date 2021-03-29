@@ -1,18 +1,15 @@
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
-import time
 from collections import defaultdict
 
-from optimizers.hierarchical_risk_parity import HierarchicalRiskParity
-from optimizers.mean_variance import MeanVariance
-from optimizers.one_over_n import OneOverN
-from optimizers.random_weights import RandomWeights
+from opt.optimizers.hierarchical_risk_parity import HierarchicalRiskParity
+from opt.optimizers.mean_variance import MeanVariance
+from opt.optimizers.one_over_n import OneOverN
+from opt.optimizers.random_weights import RandomWeights
 
-from utils.utils import create_parser, get_symbols, get_config
+from opt.opt_utils.opt_utils import create_parser, get_symbols
 from utils.data_loader import DataLoader
-from utils.constraints_builder import ConstraintsBuilder
+from opt.opt_utils.constraints_builder import ConstraintsBuilder
 from utils.market_data import MarketData
 
 CONF = {

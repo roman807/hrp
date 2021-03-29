@@ -3,8 +3,8 @@ import pandas as pd
 import scipy.optimize as sco
 
 from utils.market_data import MarketData
-from utils.constraints_builder import ConstraintsBuilder
-from optimizers.optimizer import Optimizer
+from opt.opt_utils.constraints_builder import ConstraintsBuilder
+from opt.optimizers.optimizer import Optimizer
 
 
 class MeanVariance(Optimizer):
