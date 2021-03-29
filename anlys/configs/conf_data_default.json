@@ -2,7 +2,7 @@
     "api": "local_sample_data",
     "function":"TIME_SERIES_DAILY",
     "path":"data/sample_data/",
-    "symbols":"['AAPL', 'GOOG', 'FB', 'AMZN', 'KO']",
+    "symbols":"['IVV', 'GOOG', 'FB', 'AMZN', 'KO', 'BX']",
     "apikey":"JHC56UFM63VB6RUJ",
     "outputsize":"full",
     "datatype":"csv"

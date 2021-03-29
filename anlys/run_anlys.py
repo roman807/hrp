@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import datetime
 import time
 
@@ -18,21 +17,21 @@ import dash_core_components as dcc
 YRS_LOOK_BACK = 1
 
 
-def generate_table(dataframe, max_rows=10):
-    return html.Table([
-        html.Thead(
-            html.Tr([html.Th(col) for col in dataframe.columns])
-        ),
-        html.Tbody([
-            html.Tr([
-                html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-            ]) for i in range(min(len(dataframe), max_rows))
-        ])
-    ])
+def get_trend(df_prices, n_days, margin=1.05):
+    moving_avg = df_prices.rolling(n_days).mean().iloc[-1, :].tolist()
+    current = df_prices.iloc[-1, :].tolist()
+    trend = []
+    for c, m in zip(current, moving_avg):
+        if c > margin * m:
+            trend.append('up')
+        elif c < (1 / margin) * m:
+            trend.append('down')
+        else:
+            trend.append('flat')
+    return trend
 
 
 def main():
-    start_time = time.time()
     # get user inputs
     parser = anlys_parser()
     args = parser.parse_args()
@@ -47,19 +46,21 @@ def main():
     res = {}
     df_prices, df_returns = data_loader.df_prices, data_loader.df_returns
     first_date, last_date = df_prices.index.min(), df_prices.index.max()
-    # last_date = data_loader.df_prices.index.max()
+
     res['ticker'] = market_data.universe
     res['last close'] = df_prices.loc[last_date, :].values
-    res['1yr min'] = df_prices.min()
-    res['1yr max'] = df_prices.max()
-    res['price in range [%]'] = np.round((res['last close']-res['1yr min']) / (res['1yr max']-res['1yr min']) * 100, 2)
+    res['1y min'] = df_prices.min()
+    res['1y max'] = df_prices.max()
+    res['price in range [%]'] = np.round((res['last close']-res['1y min']) / (res['1y max']-res['1y min']) * 100, 2)
     res['1day return'] = np.round(df_returns.loc[last_date, :], 3)
-    res['1week return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-5, :] - 1, 3)
-    res['1month return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-21, :] - 1, 3)
-    res['1yr return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[0, :] - 1, 3)
-    res['1yr variance'] = np.round(np.diag(market_data.cov_mat) * 252, 3)
+    res['1w return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-5, :] - 1, 3)
+    res['1m return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-21, :] - 1, 3)
+    res['1y return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[0, :] - 1, 3)
+    res['1y var'] = np.round(np.diag(market_data.cov_mat) * 252, 3)
+    res['15d trend'] = get_trend(df_prices, n_days=15)
+    res['50d trend'] = get_trend(df_prices, n_days=50)
+    res['200d trend'] = get_trend(df_prices, n_days=200)
     df_res = pd.DataFrame(res)
-    print(df_res)
 
     df_prizes_normalized = data_loader.df_prices / data_loader.df_prices.iloc[0, :]
 
@@ -69,9 +70,12 @@ def main():
             'Tickers and key indicators as of {}'.format(last_date),
             style=dict(fontSize=16, fontFamily="Arial")#, fontWeight="bold")
         ),
+        html.Td(),
         df2dash_table(df_res),
         dcc.Graph(id='graph', figure=get_plot(df_prizes_normalized))
-    ])
+        ],
+        style={'margin-top': '3vh', 'margin-left': '3vh'}
+    )
     app.run_server(debug=True, port=8010, host='localhost')
 
 

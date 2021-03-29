@@ -14,7 +14,7 @@ METHODS = {
     'iex': 'load_data_iex',
     'local_sample_data': 'load_sample_data'
 }
-ALPHAVANTAGE_SLEEP_TIME = 65
+ALPHAVANTAGE_SLEEP_TIME = 60.1
 
 
 class DataLoader:
@@ -90,7 +90,7 @@ class DataLoader:
             print('skipping', symbol, '(not available)')
             return pd.DataFrame()
         if '5 calls per minute' in response.text:
-            print('reached alphavantage free API limit -> sleep for {} seconds'.format(ALPHAVANTAGE_SLEEP_TIME))
+            print('reached alphavantage free API limit -> sleep for {} seconds'.format(round(ALPHAVANTAGE_SLEEP_TIME)))
             time.sleep(ALPHAVANTAGE_SLEEP_TIME)
             response = requests.get(url)
         data = pd.read_csv(StringIO(response.text))

@@ -1,7 +1,6 @@
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-import numpy as np
 
 
 def get_plot1(df):
@@ -14,21 +13,22 @@ COLORS = [
     'darkgrey',
     'lightgrey',
     'steelblue',
-    'lightsteelblue'
+    'lightsteelblue',
+    'seagreen',
+    'mediumseagreen'
 ]
+
 
 def get_plot(df: pd.DataFrame):
     # reference: https://plotly.com/python/line-charts/
 
     fig = go.Figure()
-
     for i in range(df.shape[1]):
         fig.add_trace(go.Scatter(x=df.index, y=df.iloc[:, i], mode='lines',
                                  name=df.columns[i],
                                  line=dict(color=COLORS[i], width=LINE_SIZE),
                                  connectgaps=True,
                                  ))
-
     fig.update_layout(
         width=1100,
         height=500,
@@ -56,7 +56,7 @@ def get_plot(df: pd.DataFrame):
         autosize=False,
         margin=dict(
             autoexpand=False,
-            l=100,
+            l=40,
             r=80,
             t=110,
         ),
@@ -74,7 +74,6 @@ def get_plot(df: pd.DataFrame):
             )
         )
     )
-
     annotations = []
     annotations.append(dict(xref='paper', yref='paper', x=0.0, y=1.05,
                             xanchor='left', yanchor='bottom',
@@ -86,4 +85,3 @@ def get_plot(df: pd.DataFrame):
 
     fig.update_layout(annotations=annotations)
     return fig
-
