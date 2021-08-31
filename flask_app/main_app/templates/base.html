@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<nav>
+  <h1>MainApp</h1>
+  <ul>
+  <li><span>{{ user.username }}</span>
+  <li><a href="{{ url_for('index') }}">Log Out</a>
+  <li><a href="{{ url_for('index') }}">Register</a>
+  <li><a href="{{ url_for('index') }}">Log In</a>
+  </ul>
+</nav>
+<section class="content">
+    <head>
+        <title>{{ title }} - Microblog</title>
+    </head>
+    <body>
+    {% block content %}{% endblock %}
+    </body>
+</section>
+</html>
