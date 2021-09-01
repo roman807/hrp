@@ -6,7 +6,8 @@ import time
 from utils.utils import get_config
 from anlys.anlys_utils.plot_prices import get_plot
 from anlys.anlys_utils.plot_table import df2dash_table
-from anlys.anlys_utils.anlys_utils import anlys_parser
+# from anlys.anlys_utils.anlys_utils import anlys_parser
+from utils.parsers import anlys_parser
 from utils.data_loader import DataLoader
 from utils.market_data import MarketData
 

@@ -11,11 +11,9 @@
   "consider_returns": true,
   "risk_appetite": 1.0,
   "expected_returns": {
-    "AAPL": 0.03,
+    "IVV": 0.03,
     "GOOG": 0.08,
     "FB": 0.08,
-    "BX": 0.02,
-    "AMZN": 0.05,
-    "KO": 0.025
+    "AMZN": 0.05
   }
 }

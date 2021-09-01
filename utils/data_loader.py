@@ -12,25 +12,30 @@ from utils.utils import get_symbols
 METHODS = {
     'alphavantage': 'load_data_alphavantage',
     'iex': 'load_data_iex',
-    'local_sample_data': 'load_sample_data'
+    'local_data': 'load_local_data'
 }
 ALPHAVANTAGE_SLEEP_TIME = 60.1
 
 
 class DataLoader:
-    def __init__(self, data_config, from_date=None, to_date=None, save_dir='sample_data/'):
+    def __init__(self, data_config, from_date=None, to_date=None):#, save_dir='sample_data/'):
         self.data_config = data_config
         self.from_date = from_date
         self.to_date = to_date
         self.all_data = {}
         self.df_returns = defaultdict(pd.DataFrame)
         self.df_prices = defaultdict(pd.DataFrame)
-        self.save_dir = save_dir
+        # self.save_dir = save_dir
         self.universe = get_symbols(data_config['symbols'])
 
     def load_data(self, get_prices_and_returns=True, save_as_csv=False, print_progress=True):
         all_returns, all_prices = [], []
         for symbol in self.universe:
+            filename = symbol + '_' + str(datetime.today().date()) + '.csv'
+            if save_as_csv:
+                if filename in os.listdir(self.data_config['target_dir']):
+                    print('skipping {}, {} already saved in {}'.format(symbol, filename, self.data_config['target_dir']))
+                    continue
             if print_progress:
                 print(' ... load:', symbol)
             data = getattr(DataLoader, METHODS[self.data_config['api']])(self, symbol)
@@ -42,8 +47,9 @@ class DataLoader:
                 all_returns.append(self.get_returns(self.all_data[symbol], symbol))
                 all_prices.append(self.get_prices(self.all_data[symbol], symbol))
             if save_as_csv:
-                self.all_data[symbol].to_csv(self.save_dir + '{}.csv'.format(symbol), index=False)
-                print('saved', symbol, 'in', self.save_dir)
+                # self.all_data[symbol].to_csv(self.save_dir + '{}.csv'.format(symbol), index=False)
+                self.all_data[symbol].to_csv(self.data_config['target_dir'] + filename, index=False)
+                print('saved', symbol, 'in', self.data_config['target_dir'])
         if get_prices_and_returns:
             keys_to_remove = []
             for k, v in self.all_data.items():
@@ -122,13 +128,13 @@ class DataLoader:
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
 
-    def load_sample_data(self, symbol) -> pd.DataFrame:
+    def load_local_data(self, symbol) -> pd.DataFrame:
         """
         :return: locally saved csv files (yahoo.finance)
         """
-        files = os.listdir(self.data_config['path'])
+        files = os.listdir(self.data_config['source_path'])
         file = [f for f in files if symbol in f][0]
-        data = pd.read_csv(self.data_config['path'] + file)
+        data = pd.read_csv(self.data_config['source_path'] + file)
         data.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
         data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         data.sort_values(by='timestamp', ascending=True, inplace=True)

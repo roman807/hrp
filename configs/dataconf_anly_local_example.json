@@ -1,0 +1,8 @@
+{
+    "api": "local_data",
+    "function":"TIME_SERIES_DAILY",
+    "source_path":"data/data_example/",
+    "symbols":"['IVV', 'TSLA', 'GOOG', 'FB', 'AMZN']",
+    "outputsize":"full",
+    "datatype":"csv"
+}

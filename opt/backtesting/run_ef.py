@@ -7,7 +7,7 @@ from opt.optimizers.mean_variance import MeanVariance
 from opt.optimizers.one_over_n import OneOverN
 from opt.optimizers.random_weights import RandomWeights
 
-from opt.opt_utils.opt_utils import create_parser, get_symbols
+# from opt.opt_utils.opt_utils import create_parser, get_symbols
 from utils.data_loader import DataLoader
 from opt.opt_utils.constraints_builder import ConstraintsBuilder
 from utils.market_data import MarketData

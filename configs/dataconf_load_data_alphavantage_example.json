@@ -1,0 +1,9 @@
+{
+    "api": "alphavantage",
+    "function": "TIME_SERIES_DAILY",
+    "target_dir": "data/data_example/",
+    "symbols": "['IVV', 'TSLA', 'GOOG', 'FB', 'AMZN']",
+    "apikey": "*************",
+    "outputsize": "full",
+    "datatype": "csv"
+}
