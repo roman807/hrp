@@ -12,29 +12,39 @@ and expectations. The portfolio is optimized using the Hieratchical Risk Parity 
  * risk appetite / expected returns
 4. run optimization and receive weights for each instrument in yout universe
 
-### Running instructions (unix terminal) ###
+### Example running instructions (unix terminal) ###
 1. clone the repo
-2. append the projects path to PYTHONPATH:
+2. create and activate the conda-environment and install the required libraries from the environment.yml file 
 ```
-export PYTHONPATH="${PYTHONPATH}:/path/to/project/"
+conda env create -f environment.yml
+conda activate hrp-env
 ```
-3. create a data-configuration json file (see the example: "configs/dataconf_load_data_alphavantage.json"). To load the input data, you can use the free 
+3. append the project path to PYTHONPATH:
+```
+export PYTHONPATH="${PYTHONPATH}:</path/to/project/>"
+```
+4. download the market data CSV files on your machine
+* create a data-configuration json file (see the example: "configs/dataconf_load_data_alphavantage.json"). To download the market data, you can use the free 
 Alphavantage API
-   * specify the tickers of all stocks that you consider in your portfolio
+   * specify the tickers of all stocks that you are interested in
    * specify your Alphavantage API-key (get it here: https://www.alphavantage.co/support/#api-key)
 
-4. load the data:
+* run the command to download the data (use the name of your json config file):
 ```
-python data/run_get_data.py --data_conf configs/<dataconf_load_data_alphavantage_example.json>   
+python data/run_get_data.py --data_conf configs/dataconf_load_data_alphavantage_example.json 
 ```
-5. create a data-configuration json file for the analysis (see the example "configs/dataconf_anly_local_example.json"). Use the downloaded CSV files from step (3)
+5. run the analysys
+* create a data-configuration json file for the analysis (see the example "configs/dataconf_anly_local_example.json"). Use the tickers from data you downloaded CSV files from step (4.)
+* run the command:
 ```
-python anly/run_anly.py --data_conf configs/<dataconf_anly_local_example.json>
+python anlys/run_anlys.py --data_conf configs/dataconf_anly_local_example.json
 ```
-6. specify the configurations for the optimization problem
+* view the resulting dashboard in your browser on: ```http://localhost:8010/```
+6. optimize your portfolio 
+* specify the configurations for the optimization problem
    * create a data-configuration json file for the optimization problem (see the example "configs/dataconf_opt_local_example.json")
    * create an optimization configuration where you specify your constraints and expected returns (see the example "configs/optconf_hrp_example.json")
-7. run the optimization problem:
+* run the optimization problem:
 ```
 python opt/run_opt.py --conf configs/optconf_hrp.json --data_conf configs/dataconf_opt_local_data.json
 ```
