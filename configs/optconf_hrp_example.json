@@ -9,7 +9,7 @@
   },
   "max_number_instruments": 6,
   "consider_returns": true,
-  "risk_appetite": 1.0,
+  "risk_appetites": [0, 0.5, 1, 10, 100],
   "expected_returns": {
     "IVV": 0.03,
     "GOOG": 0.08,

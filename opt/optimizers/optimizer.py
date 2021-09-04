@@ -37,7 +37,7 @@ class Optimizer:
     def print_result(self):
         # self.variance = np.round(np.linalg.multi_dot([self.weights, self.market_data.cov_mat, self.weights]), 6)
         # self.exp_return = np.round(sum(np.array(self.weights) * np.array(self.exp_returns)), 6)
-        print('optimal allocation:')
+        print('optimal allocation (risk appetite={}):'.format(self.risk_appetite))
         print(self.weights)
         print('variance:', self.variance)
         print('expected return:', self.exp_return)
