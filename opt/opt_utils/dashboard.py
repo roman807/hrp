@@ -4,6 +4,7 @@ import dash_core_components as dcc
 from dash.dependencies import Input, Output
 import plotly.express as px
 
+
 class OptimizationDahsboard:
     def __init__(self, conf, allocations_df, risk_return_df):
         self.conf = conf
@@ -33,19 +34,17 @@ class OptimizationDahsboard:
                               style={'display': 'inline-block'}
                               )
 
-
         @app.callback(
             Output("bar-chart", "figure"),
             [Input("dropdown", "value")])
         def update_bar_chart(risk_appetite):
             mask = self.allocations_df["risk_appetite"] == risk_appetite
             fig = px.bar(self.allocations_df[mask], x="weights", y="index", orientation='h', text="weights", barmode="group")
-            fig.update_traces(texttemplate='%{text:%f}', textposition='inside')
+            fig.update_traces(texttemplate='%{text:.1%}', textposition='inside')
             fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
             fig.update_layout(title_text='Optimal allocation')
             fig.update_xaxes(visible=False)
             return fig
-
 
         @app.callback(
             Output("scatter-plot", "figure"),
@@ -63,9 +62,6 @@ class OptimizationDahsboard:
             fig.update_yaxes(
                 range=[self.risk_return_df["expected_return"].min() - .01, self.risk_return_df["expected_return"].max() + .01])
             fig.update_layout(title_text='Risk / return by risk appetite', xaxis_tickformat='.2%', yaxis_tickformat='.2%')
-            # fig.update_layout(xaxis_tickformat='.2%')
-            # fig.update_layout(yaxis_tickformat='.2%')
             return fig
 
-
-        app.run_server(debug=True)
+        app.run_server(debug=True, port=8012, host='localhost')

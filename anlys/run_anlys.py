@@ -1,12 +1,10 @@
 import numpy as np
 import pandas as pd
 import datetime
-import time
 
 from utils.utils import get_config
 from anlys.anlys_utils.plot_prices import get_plot
 from anlys.anlys_utils.plot_table import df2dash_table
-# from anlys.anlys_utils.anlys_utils import anlys_parser
 from utils.parsers import anlys_parser
 from utils.data_loader import DataLoader
 from utils.market_data import MarketData
@@ -15,7 +13,8 @@ import dash
 import dash_html_components as html
 import dash_core_components as dcc
 
-YRS_LOOK_BACK = 1
+YRS_LOOK_BACK_PLOT = 1
+MAX_YRS_LOOK_BACK = 5
 
 
 def get_trend(df_prices, n_days, margin=1.05):
@@ -39,7 +38,7 @@ def main():
     data_conf = get_config(args.data_conf)
 
     returns_to_date = datetime.date.today()
-    returns_from_date = returns_to_date - datetime.timedelta(days=365*YRS_LOOK_BACK)
+    returns_from_date = returns_to_date - datetime.timedelta(days=365*MAX_YRS_LOOK_BACK)
     data_loader = DataLoader(data_conf, returns_from_date, returns_to_date)
     data_loader.load_data()
     market_data = MarketData(data_loader.df_returns)
@@ -50,20 +49,21 @@ def main():
 
     res['ticker'] = market_data.universe
     res['last close'] = df_prices.loc[last_date, :].values
-    res['1y min'] = df_prices.min()
-    res['1y max'] = df_prices.max()
+    res['1y min'] = df_prices[-252:-1].min()
+    res['1y max'] = df_prices[-252:-1].max()
     res['price in range [%]'] = np.round((res['last close']-res['1y min']) / (res['1y max']-res['1y min']) * 100, 2)
     res['1day return'] = np.round(df_returns.loc[last_date, :], 3)
     res['1w return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-5, :] - 1, 3)
     res['1m return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-21, :] - 1, 3)
-    res['1y return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[0, :] - 1, 3)
+    res['1y return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-252, :] - 1, 3)
     res['1y var'] = np.round(np.diag(market_data.cov_mat) * 252, 3)
     res['15d trend'] = get_trend(df_prices, n_days=15)
     res['50d trend'] = get_trend(df_prices, n_days=50)
     res['200d trend'] = get_trend(df_prices, n_days=200)
     df_res = pd.DataFrame(res)
 
-    df_prizes_normalized = data_loader.df_prices / data_loader.df_prices.iloc[0, :]
+    df_plot = data_loader.df_prices.iloc[-252*YRS_LOOK_BACK_PLOT:-1, :]
+    df_prizes_normalized = df_plot / df_plot.iloc[0, :]
 
     app = dash.Dash()
     app.layout = html.Div([
@@ -77,7 +77,7 @@ def main():
         ],
         style={'margin-top': '3vh', 'margin-left': '3vh'}
     )
-    app.run_server(debug=True, port=8010, host='localhost')
+    app.run_server(debug=True, port=8011, host='localhost')
 
 
 if __name__ == '__main__':

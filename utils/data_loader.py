@@ -54,6 +54,7 @@ class DataLoader:
             keys_to_remove = []
             for k, v in self.all_data.items():
                 if not v['timestamp'].min() <= self.from_date:
+                    print('WARNING: remove {} from analysis -- history too short'.format(k))
                     keys_to_remove.append(k)
             for k in keys_to_remove:
                 self.all_data.pop(k)

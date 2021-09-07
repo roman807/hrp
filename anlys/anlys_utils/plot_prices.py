@@ -15,7 +15,15 @@ COLORS = [
     'steelblue',
     'lightsteelblue',
     'seagreen',
-    'mediumseagreen'
+    'mediumseagreen',
+    'darkblue',
+    'orange',
+    'lightgreen',
+    'red',
+    'darkred',
+    'yellow',
+    'darkorange',
+    'brown',
 ]
 
 
