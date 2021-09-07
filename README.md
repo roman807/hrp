@@ -39,7 +39,7 @@ python data/run_get_data.py --data_conf configs/dataconf_load_data_alphavantage_
 ```
 python anlys/run_anlys.py --data_conf configs/dataconf_anly_local_example.json
 ```
-* view the resulting dashboard in your browser on: ```http://localhost:8010/```
+* view the resulting dashboard in your browser on: ```http://localhost:8011/```
 6. optimize your portfolio 
 * specify the configurations for the optimization problem
    * create a data-configuration json file for the optimization problem (see the example "configs/dataconf_opt_local_example.json")
@@ -48,3 +48,4 @@ python anlys/run_anlys.py --data_conf configs/dataconf_anly_local_example.json
 ```
 python opt/run_opt.py --conf configs/optconf_hrp.json --data_conf configs/dataconf_opt_local_data.json
 ```
+* check the optimization results in the dashboard in your browser on: ```http://localhost:8012/```
