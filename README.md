@@ -33,7 +33,7 @@ Alphavantage API
 ```
 python data/run_get_data.py --data_conf configs/dataconf_load_data_alphavantage_example.json 
 ```
-5. run the analysys
+5. run the analysis
 * create a data-configuration json file for the analysis (see the example "configs/dataconf_anly_local_example.json"). Use the tickers from data you downloaded CSV files from step (4.)
 * run the command:
 ```
