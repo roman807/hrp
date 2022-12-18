@@ -136,7 +136,8 @@ class DataLoader:
         files = os.listdir(self.data_config['source_path'])
         file = [f for f in files if symbol in f][0]
         data = pd.read_csv(self.data_config['source_path'] + file)
-        data.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+        # data.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+        data = data[['timestamp', 'open', 'high', 'low', 'close', 'volume']]
         data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
