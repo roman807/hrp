@@ -1,6 +1,6 @@
 {
     "api": "alphavantage",
-    "function": "TIME_SERIES_DAILY",
+    "function": "TIME_SERIES_DAILY_ADJUSTED",
     "target_dir": "data/data_example/",
     "symbols": "['IVV', 'TSLA', 'GOOG', 'FB', 'AMZN']",
     "apikey": "*************",
