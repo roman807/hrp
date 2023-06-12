@@ -10,8 +10,8 @@ from utils.data_loader import DataLoader
 from utils.market_data import MarketData
 
 import dash
-import dash_html_components as html
-import dash_core_components as dcc
+from dash import html
+from dash import dcc
 
 YRS_LOOK_BACK_PLOT = 1
 MAX_YRS_LOOK_BACK = 5
@@ -41,6 +41,7 @@ def main():
     returns_from_date = returns_to_date - datetime.timedelta(days=365*MAX_YRS_LOOK_BACK)
     data_loader = DataLoader(data_conf, returns_from_date, returns_to_date)
     data_loader.load_data()
+    data_loader.calculate_prices_and_returns()
     market_data = MarketData(data_loader.df_returns)
 
     res = {}
