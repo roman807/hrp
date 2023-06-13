@@ -18,15 +18,29 @@ def df2dash_table(df):
         style_data_conditional=[
             {
                 'if': {
-                    'filter_query': '{15d trend} = "up"',
-                    'column_id': '15d trend'
+                    'filter_query': '{5d trend} = "up"',
+                    'column_id': '5d trend'
                 },
                 'backgroundColor': 'lightgreen'
             },
             {
                 'if': {
-                    'filter_query': '{15d trend} = "down"',
-                    'column_id': '15d trend'
+                    'filter_query': '{5d trend} = "down"',
+                    'column_id': '5d trend'
+                },
+                'backgroundColor': 'lightcoral'
+            },
+            {
+                'if': {
+                    'filter_query': '{20d trend} = "up"',
+                    'column_id': '20d trend'
+                },
+                'backgroundColor': 'lightgreen'
+            },
+            {
+                'if': {
+                    'filter_query': '{20d trend} = "down"',
+                    'column_id': '20d trend'
                 },
                 'backgroundColor': 'lightcoral'
             },

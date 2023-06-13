@@ -58,9 +58,10 @@ def main():
     res['1m return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-21, :] - 1, 3)
     res['1y return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-252, :] - 1, 3)
     res['1y var'] = np.round(np.diag(market_data.cov_mat) * 252, 3)
-    res['15d trend'] = get_trend(df_prices, n_days=15)
-    res['50d trend'] = get_trend(df_prices, n_days=50)
-    res['200d trend'] = get_trend(df_prices, n_days=200)
+    res['5d trend'] = get_trend(df_prices, n_days=5, margin=1.03)
+    res['20d trend'] = get_trend(df_prices, n_days=20, margin=1.05)
+    res['50d trend'] = get_trend(df_prices, n_days=50, margin=1.05)
+    res['200d trend'] = get_trend(df_prices, n_days=200, margin=1.05)
     df_res = pd.DataFrame(res)
 
     df_plot = data_loader.df_prices.iloc[-252*YRS_LOOK_BACK_PLOT:-1, :]
