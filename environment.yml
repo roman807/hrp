@@ -12,3 +12,4 @@ dependencies:
   - dash
   - flask
   - scikit-learn
+  - pytest
