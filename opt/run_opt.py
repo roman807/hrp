@@ -28,6 +28,7 @@ def main():
     returns_from_date = returns_to_date - datetime.timedelta(days=365 * conf['yrs_look_back'])
     data_loader = DataLoader(data_conf, returns_from_date, returns_to_date)
     data_loader.load_data()
+    data_loader.calculate_prices_and_returns()
     market_data = MarketData(data_loader.df_returns)
 
     # run optimization:

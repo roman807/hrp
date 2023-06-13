@@ -10,8 +10,8 @@ from utils.data_loader import DataLoader
 from utils.market_data import MarketData
 
 import dash
-import dash_html_components as html
-import dash_core_components as dcc
+from dash import html
+from dash import dcc
 
 YRS_LOOK_BACK_PLOT = 1
 MAX_YRS_LOOK_BACK = 5
@@ -41,6 +41,7 @@ def main():
     returns_from_date = returns_to_date - datetime.timedelta(days=365*MAX_YRS_LOOK_BACK)
     data_loader = DataLoader(data_conf, returns_from_date, returns_to_date)
     data_loader.load_data()
+    data_loader.calculate_prices_and_returns()
     market_data = MarketData(data_loader.df_returns)
 
     res = {}
@@ -57,9 +58,10 @@ def main():
     res['1m return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-21, :] - 1, 3)
     res['1y return'] = np.round(df_prices.iloc[-1, :] / df_prices.iloc[-252, :] - 1, 3)
     res['1y var'] = np.round(np.diag(market_data.cov_mat) * 252, 3)
-    res['15d trend'] = get_trend(df_prices, n_days=15)
-    res['50d trend'] = get_trend(df_prices, n_days=50)
-    res['200d trend'] = get_trend(df_prices, n_days=200)
+    res['5d trend'] = get_trend(df_prices, n_days=5, margin=1.03)
+    res['20d trend'] = get_trend(df_prices, n_days=20, margin=1.05)
+    res['50d trend'] = get_trend(df_prices, n_days=50, margin=1.05)
+    res['200d trend'] = get_trend(df_prices, n_days=200, margin=1.05)
     df_res = pd.DataFrame(res)
 
     df_plot = data_loader.df_prices.iloc[-252*YRS_LOOK_BACK_PLOT:-1, :]
