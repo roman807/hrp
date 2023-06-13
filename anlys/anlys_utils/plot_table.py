@@ -1,4 +1,4 @@
-import dash_table
+from dash import dash_table
 
 
 def df2dash_table(df):

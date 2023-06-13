@@ -13,7 +13,7 @@ def main():
         os.makedirs(data_conf["target_dir"])
 
     data_loader = DataLoader(data_conf)
-    data_loader.load_data(save_as_csv=True, get_prices_and_returns=False)
+    data_loader.load_data(save_as_csv=True)
 
 
 if __name__ == '__main__':

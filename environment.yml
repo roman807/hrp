@@ -11,3 +11,4 @@ dependencies:
   - plotly
   - dash
   - flask
+  - scikit-learn
