@@ -1,0 +1,4 @@
+timestamp,open,high,low,close,adjusted_close,volume,dividend_amount,split_coefficient
+2005-01-01,1.0,1.1,0.9,1.0,1.0,100,0.0,1.0
+2005-01-02,1.0,1.1,0.9,1.05,1.05,100,0.0,1.0
+2005-01-03,1.0,1.1,0.9,0.95,0.95,100,0.0,1.0

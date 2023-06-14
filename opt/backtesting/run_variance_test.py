@@ -142,8 +142,5 @@ def main():
     plt.tight_layout()
     plt.savefig('backtesting/mv_vs_hrp_no_outliers.png')
 
-
-
-
 if __name__ == '__main__':
     main()

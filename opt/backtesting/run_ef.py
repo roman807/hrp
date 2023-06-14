@@ -11,6 +11,7 @@ from opt.optimizers.random_weights import RandomWeights
 from utils.data_loader import DataLoader
 from opt.opt_utils.constraints_builder import ConstraintsBuilder
 from utils.market_data import MarketData
+from utils.utils import get_symbols
 
 CONF = {
   "optimizer": "HierarchicalRiskParity",
@@ -42,7 +43,7 @@ CONF_DATA = {
 
 def main():
     # get user inputs
-    parser = create_parser()
+    # parser = create_parser()
     # args = parser.parse_args()
     # conf = get_config(args.conf)
     # data_conf = get_config(args.data_conf)
