@@ -1,0 +1,5 @@
+# minimal env for testing
+numpy==1.24.3
+pandas==1.5.2
+pytest==7.3.2
+requests==2.31.0
