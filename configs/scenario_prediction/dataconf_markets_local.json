@@ -1,0 +1,5 @@
+{
+    "api": "local_data",
+    "source_path": "data/data_markets/",
+    "symbols": "['SPY']"
+}

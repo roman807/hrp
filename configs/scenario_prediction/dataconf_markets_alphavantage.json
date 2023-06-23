@@ -1,0 +1,9 @@
+{
+    "api": "alphavantage",
+    "symbols": "['SPY', 'EWJ', 'ASHR', 'EWZ', 'VGK']",
+    "function": "TIME_SERIES_DAILY_ADJUSTED",
+    "target_dir": "data/data_markets/",
+    "apikey": "*************",
+    "outputsize": "full",
+    "datatype": "csv"
+}
