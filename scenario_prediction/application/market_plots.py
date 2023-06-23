@@ -156,4 +156,4 @@ class MarketPlots:
             style={'margin-top': '3vh', 'margin-left': '3vh'}
         )
 
-        app.run_server(debug=True, port=8012, host='localhost')
+        app.run_server(debug=True, port=8013, host='localhost')
