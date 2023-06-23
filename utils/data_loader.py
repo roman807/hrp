@@ -27,7 +27,7 @@ class DataLoader:
         self.df_prices = defaultdict(pd.DataFrame)
         self.universe = get_symbols(data_config['symbols'])
 
-    def load_data(self, save_as_csv=False, print_progress=True):
+    def load_data(self, save_as_csv=False, print_progress=True, adjust_for_split=True):
         """
         load datasets into all_data dict (key: ticker, value: dataset)
         if save_as_csv==True: CSVs will be stored locally for further analysis (e.g. run_anlys or run_opt with
@@ -36,12 +36,14 @@ class DataLoader:
         for symbol in self.universe:
             filename = symbol + '_' + str(datetime.today().date()) + '.csv'
             if save_as_csv:
-                if filename in os.listdir(self.data_config['target_dir']):
+                if 'target_dir' in self.data_config and filename in os.listdir(self.data_config['target_dir']):
                     print('skipping {}, {} already saved in {}'.format(symbol, filename, self.data_config['target_dir']))
                     continue
             if print_progress:
                 print(' ... load:', symbol)
             data = getattr(DataLoader, METHODS[self.data_config['api']])(self, symbol)
+            if 'split_coefficient' in data.columns and adjust_for_split:
+                data = self.adjust_for_stock_split(data)
             if type(data) == type(None):
                 continue
             if data.empty:
@@ -51,6 +53,10 @@ class DataLoader:
             if save_as_csv:
                 self.all_data[symbol].to_csv(self.data_config['target_dir'] + filename, index=False)
                 print('saved', symbol, 'in', self.data_config['target_dir'])
+
+    def adjust_for_stock_split(self, data):
+        # Todo: implement adjustment for stock-split
+        return data
 
     def calculate_prices_and_returns(self):
         """
@@ -112,12 +118,93 @@ class DataLoader:
             datasets_mr[symbol] = df
         return datasets_mr
 
-    def get_returns(self, data, symbol):
-        data['returns'] = [0.0] + (np.log(np.array(data['close'])[1:] / np.array(data['close'])[:-1])).tolist()
-        ts = data[(data['timestamp'] >= self.from_date) & (data['timestamp'] <= self.to_date)][['timestamp', 'returns']]
-        ts = ts.set_index('timestamp')
-        ts.columns = [symbol]
-        return ts
+    def get_datasets_for_scenario_prediction(
+            self,
+            margin=None,
+            n_future_days_target=None,
+            use_adjusted_close=True,
+            with_target=True
+    ):
+        n_days_windows = [5, 10, 20, 63, 126, 251]
+        # n_future_days_target = 63
+
+        def map_future_return_to_target(x, margin):
+            if x > margin:
+                return 'up'
+            if x < -margin:
+                return 'down'
+            return 'flat'
+
+        if not self.all_data:
+            raise Exception("all_data is empty - load data first with the 'load_data'-function")
+
+        if use_adjusted_close:
+            price_col = "adjusted_close"
+        else:
+            price_col = 'close'
+
+        datasets_sp = {}
+        for symbol in self.all_data.keys():
+            df = self.all_data[symbol][['timestamp', price_col]]
+            df_returns = pd.Series(self.get_returns(df, price_col=price_col, as_DataFrame=False))
+
+            data_dict = {}
+            data_dict['timestamp'] = df['timestamp'].apply(lambda x: pd.to_datetime(x))
+            data_dict['price'] = df[price_col]
+            data_dict['price_normalized'] = df[price_col] / df[price_col][0]
+            for n_days in n_days_windows:
+                # add moving averages:
+                data_dict[f'moving_avg_{n_days}'] = df[price_col].rolling(n_days).mean()
+                # add moving_average-based features:
+                data_dict[f'current_over_moving_avg_{n_days}'] = (
+                    df[price_col] / df[price_col].rolling(n_days).mean()
+                )
+                # add return-based features
+                data_dict[f'return_over_{n_days}'] = (
+                    np.concatenate((
+                        np.array([np.nan] * n_days),
+                        (df[price_col][n_days:].values - df[price_col][:-n_days].values) / df[price_col][:-n_days].values
+                    ))
+                )
+                # add volatility-based features
+                data_dict[f'vola_over_{n_days}'] = df_returns.rolling(n_days).std() * np.sqrt(n_days)
+
+            # add target variable
+            if with_target:
+                data_dict[f'future_return'] = (
+                    np.concatenate((
+                        (
+                            (df[price_col][n_future_days_target:].values - df[price_col][:-n_future_days_target].values)
+                            / df[price_col][:-n_future_days_target].values
+                        ),
+                        np.array([np.nan] * n_future_days_target)
+                    ))
+                )
+                df_symbol = pd.DataFrame(data_dict).iloc[max(n_days_windows):-n_future_days_target, :]
+                df_symbol['target'] = df_symbol[f'future_return'].apply(lambda x: map_future_return_to_target(x, margin))
+            else:
+                df_symbol = pd.DataFrame(data_dict).iloc[max(n_days_windows):, :]
+            datasets_sp[symbol] = df_symbol.set_index('timestamp', drop=True)
+        return datasets_sp
+
+    def get_returns(self, data, symbol=None, price_col='close', as_DataFrame=True):
+        """
+        :param data: dataframe with columns 'timestamp' and 'close'
+        :param symbol: symbol of stock for return calculation. Only needed if 'as_DataFrame=True'
+        :param price_col: column to perform return calculation on (either 'close' or 'adjusted_close')
+        :param as_DataFrame: set to true if returns should be returned in a dataframe with timestamp as index
+                             and 'symbol' as column name. If false, list of returns is returned instead
+        :return: returns as list or DataFrame
+        """
+        returns = [0.0] + (np.log(np.array(data[price_col])[1:] / np.array(data[price_col])[:-1])).tolist()
+        if not as_DataFrame:
+            return returns
+        else:
+            data['returns'] = returns
+            ts = data[(data['timestamp'] >= self.from_date) & (data['timestamp'] <= self.to_date)][['timestamp', 'returns']]
+            ts = ts.set_index('timestamp')
+            ts.columns = [symbol]
+            return ts
 
     def get_prices(self, data, symbol):
         ts = data[(data['timestamp'] >= self.from_date) & (data['timestamp'] <= self.to_date)][['timestamp', 'close']]
@@ -186,10 +273,14 @@ class DataLoader:
         if not files_with_symbol:
             print(f"no file with symbol {symbol} in local data - make sure to download file first")
             return
-        file = files_with_symbol[0]
+        file = sorted(files_with_symbol)[-1]
         data = pd.read_csv(self.data_config['source_path'] + file)
-        # data.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
-        data = data[['timestamp', 'open', 'high', 'low', 'close', 'volume']]
+        columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
+        if 'adjusted_close' in data.columns:
+            columns.append('adjusted_close')
+        if 'split_coefficient' in data.columns:
+            columns.append('split_coefficient')
+        data = data[columns]
         data['timestamp'] = data['timestamp'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
         data.sort_values(by='timestamp', ascending=True, inplace=True)
         return data
